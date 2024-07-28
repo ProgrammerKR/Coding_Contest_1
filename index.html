@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Code Puzzle Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 800px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            text-align: center;
+        }
+
+        #puzzle-area {
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            background-color: #007bff;
+            color: #fff;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        textarea {
+            width: calc(100% - 22px);
+            box-sizing: border-box;
+            margin-top: 10px;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            height: 100px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: #ffffff;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            max-width: 500px;
+            width: 100%;
+        }
+
+        .modal-header {
+            font-size: 18px;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        .modal-body {
+            margin-bottom: 20px;
+        }
+
+        .modal-footer {
+            margin-top: 10px;
+        }
+
+        .close, .ok {
+            background: #007bff;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .ok:hover, .close:hover {
+            background: #0056b3;
+        }
+
+        .close {
+            background: #dc3545;
+        }
+
+        .close:hover {
+            background: #c82333;
+        }
+
+        @media (max-width: 600px) {
+            button {
+                width: 100%;
+            }
+
+            textarea {
+                width: calc(100% - 20px);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Code Puzzle Game</h1>
+        <div id="puzzle-area">
+            <!-- Puzzle content will be loaded here -->
+        </div>
+        <button id="check-answer">Check Answer</button>
+    </div>
+
+    <!-- Feedback Modal -->
+    <div id="feedback-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">Feedback</div>
+            <div class="modal-body" id="feedback"></div>
+            <div class="modal-footer">
+                <button class="ok" onclick="closeFeedbackModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Score Modal -->
+    <div id="score-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">Final Score</div>
+            <div class="modal-body" id="final-score"></div>
+            <div class="modal-footer">
+                <p id="certificate-message"></p>
+                <button class="ok" onclick="closeScoreModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Already Taken Modal -->
+    <div id="already-taken-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">Test Already Taken</div>
+            <div class="modal-body">You have already taken the test. Please return to the previous page.</div>
+            <div class="modal-footer">
+                <button class="ok" onclick="handleAlreadyTaken()">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const puzzles = [
+            { question: "What is the output of the following code?\n\nvar x = 10;\nconsole.log(x);", correctAnswer: "10" },
+            { question: "Fill in the missing part to loop through the array:\n\nvar numbers = [1, 2, 3, 4, 5];\nfor (var i = 0; i < numbers.length; ___) {\n    console.log(numbers[i]);\n}", correctAnswer: "i++)" },
+            { question: "What will be the output of:\n\nconsole.log('Hello' + ' World');", correctAnswer: "Hello World" },
+            { question: "Complete the function to return the sum of two numbers:\n\nfunction sum(a, b) {\n    return ___;\n}", correctAnswer: "a + b" },
+            { question: "What does the '===' operator do?\n\nIt checks for ___ equality between two values.", correctAnswer: "strict" },
+            { question: "Which keyword is used to define a variable in JavaScript?\n\nvar, let, ___", correctAnswer: "const" },
+            { question: "What will be the output of:\n\nconsole.log(2 * 3 + 5);", correctAnswer: "11" },
+            { question: "Complete the loop to print numbers from 1 to 5:\n\nfor (var i = 1; i <= 5; ___) {\n    console.log(i);\n}", correctAnswer: "i++" },
+            { question: "What will be the output of:\n\nconsole.log(typeof 'Hello');", correctAnswer: "string" },
+            { question: "Complete the function to check if a number is even:\n\nfunction isEven(num) {\n    return num % 2 === ___;\n}", correctAnswer: "0" },
+            { question: "What does 'console.log' do?\n\nIt ___ a message to the console.", correctAnswer: "prints" },
+            { question: "What will be the output of:\n\nconsole.log(5 - 3 * 2);", correctAnswer: "-1" },
+            { question: "Which method is used to add an element to the end of an array?\n\narray.___('element');", correctAnswer: "push" },
+            { question: "Complete the function to return the length of a string:\n\nfunction getLength(str) {\n    return str.___;\n}", correctAnswer: "length" },
+            { question: "What is the result of:\n\nconsole.log(5 == '5');", correctAnswer: "true" },
+            { question: "What keyword is used to create a function?\n\n___ function myFunction() {}", correctAnswer: "function" },
+            { question: "What will be the output of:\n\nconsole.log(10 / 2);", correctAnswer: "5" },
+            { question: "Complete the conditional statement:\n\nif (x > 10) {\n    console.log('x is greater than 10');\n} else {\n    console.log('x is ___');\n}", correctAnswer: "not greater than 10" },
+            { question: "What does 'parseInt' do?\n\nIt converts a ___ to an integer.", correctAnswer: "string" },
+            { question: "What will be the output of:\n\nconsole.log(1 == 1 && 2 == 2);", correctAnswer: "true" },
+            { question: "What method is used to remove the last element from an array?\n\narray.___();", correctAnswer: "pop" },
+            { question: "Complete the function to return the largest of two numbers:\n\nfunction max(a, b) {\n    return a > b ? ___ : b;\n}", correctAnswer: "a" },
+            { question: "What will be the output of:\n\nconsole.log('5' * 2);", correctAnswer: "10" },
+            { question: "What keyword is used to handle errors in JavaScript?\n\ntry, ___", correctAnswer: "catch" },
+            { question: "Complete the loop to print numbers from 5 to 1:\n\nfor (var i = 5; i >= 1; ___) {\n    console.log(i);\n}", correctAnswer: "i--" },
+            { question: "What is the result of:\n\nconsole.log(5 > 3 ? 'Yes' : 'No');", correctAnswer: "Yes" },
+            { question: "Complete the function to return the square of a number:\n\nfunction square(num) {\n    return num * ___;\n}", correctAnswer: "num" },
+            { question: "What will be the output of:\n\nconsole.log('Hello'.length);", correctAnswer: "5" }
+        ];
+
+        const puzzleArea = document.getElementById('puzzle-area');
+        const checkAnswerButton = document.getElementById('check-answer');
+        const feedbackModal = document.getElementById('feedback-modal');
+        const feedbackText = document.getElementById('feedback');
+        const scoreModal = document.getElementById('score-modal');
+        const finalScoreText = document.getElementById('final-score');
+        const certificateMessage = document.getElementById('certificate-message');
+        const alreadyTakenModal = document.getElementById('already-taken-modal');
+
+        let currentPuzzle = 0;
+        let score = 0;
+
+        // Check if user has already taken the test
+        if (localStorage.getItem('testTaken') === 'true') {
+            showAlreadyTakenModal();
+        } else {
+            loadPuzzle();
+        }
+
+        function loadPuzzle() {
+            if (currentPuzzle < puzzles.length) {
+                puzzleArea.innerHTML = `
+                    <div class="modal-header">Puzzle ${currentPuzzle + 1}</div>
+                    <p>${puzzles[currentPuzzle].question}</p>
+                    <textarea id="user-answer" placeholder="Type your answer here..."></textarea>
+                `;
+                checkAnswerButton.style.display = 'block';
+            } else {
+                showScoreModal();
+                localStorage.setItem('testTaken', 'true'); // Mark test as taken
+            }
+        }
+
+        function checkAnswer() {
+            const userAnswer = document.getElementById('user-answer').value.trim();
+            if (userAnswer === puzzles[currentPuzzle].correctAnswer) {
+                score++;
+                feedbackText.innerHTML = "Correct!";
+            } else {
+                feedbackText.innerHTML = `Incorrect. The correct answer was: ${puzzles[currentPuzzle].correctAnswer}`;
+            }
+            currentPuzzle++;
+            checkAnswerButton.style.display = 'none';
+            showFeedbackModal();
+        }
+
+        function showFeedbackModal() {
+            feedbackModal.style.display = 'flex';
+        }
+
+        function closeFeedbackModal() {
+            feedbackModal.style.display = 'none';
+            loadPuzzle();
+        }
+
+        function showScoreModal() {
+            const percentage = (score / puzzles.length) * 100;
+            finalScoreText.innerHTML = `Your final score is ${score} out of ${puzzles.length} (${percentage.toFixed(2)}%).`;
+            
+            if (percentage >= 80) {
+                certificateMessage.innerHTML = `Congratulations! You are eligible for a certificate. <a href="https://wa.link/53nz5x" target="_blank">Click here to get your certificate</a>.`;
+            } else {
+                certificateMessage.innerHTML = `You need at least 80% to get a certificate. Your score is ${percentage.toFixed(2)}%.`;
+            }
+            
+            scoreModal.style.display = 'flex';
+        }
+
+        function closeScoreModal() {
+            scoreModal.style.display = 'none';
+        }
+
+        function showAlreadyTakenModal() {
+            alreadyTakenModal.style.display = 'flex';
+        }
+
+        function handleAlreadyTaken() {
+            alreadyTakenModal.style.display = 'none';
+            window.history.back(); // Navigate back to the previous page
+        }
+
+        checkAnswerButton.addEventListener('click', checkAnswer);
+    </script>
+</body>
+</html>
